@@ -1,0 +1,17 @@
+---
+- hosts: web
+  gather_facts: no
+  tasks:
+    - name: make sure the path exist
+      become: yes
+      file:
+        path: "{{ cfg_path }}"
+        state: directory
+        owner: vagrant
+    - name: copy cfg file
+      template:
+        src: "{{ cfg_file_name }}"
+        dest: "{{ cfg_path }}/{{ cfg_file_name }}"
+    - name: print inventory hostname
+      debug:
+        var: inventory_hostname

@@ -1,0 +1,20 @@
+[csr_1000v]
+csr1.test.com version=17.1 location=101
+csr2.test.com version=17.2
+csr3.test.com
+
+[csr_1000v:vars]
+a=1
+b=2
+c=3
+version=17.0
+
+[catalyst_9k]
+c9k.test.com
+
+[asr_9k]
+ars1.test.com
+
+[ios_xe:children]
+csr_1000v
+catalyst_9k

@@ -1,0 +1,11 @@
+---
+- hosts: web
+  become: yes
+  tasks:
+    - name: create hosts file
+      template:
+        src: test.j2
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: "0644"

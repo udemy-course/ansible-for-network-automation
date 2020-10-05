@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    myname: tom
+    mylist:
+      - 3
+      - 5
+      - 4
+      - 3
+      - 1
+      - 9
+    iplist:
+      - 100.0.0.1
+      - 200.0.0.1
+      - 300.0.0.1
+    networklist:
+      - 192.0.2.1/255.255.255.0
+      - 10.0.0.1/255.255.255.128
+      - 10.0.0.200/255.255.255.128
+  tasks:
+    - name: test1
+      debug:
+        msg: "{{ myname | capitalize }}"
+    - name: test2
+      debug:
+        msg: "{{ mylist | unique | sort}}"
+    - name: test3
+      debug:
+        msg: "{{ iplist | ipaddr }}"
+    - name: test4
+      debug:
+        msg: "{{ networklist | ipaddr('network/prefix') }}"
+    - name: test5
+      debug:
+        msg: "{{ myname }}"
+    - name: test6
+      set_fact:
+        my_newname: "{{ myname | capitalize }}"
+    - name: test7
+      debug:
+        msg: "{{ my_newname }}"

@@ -1,0 +1,22 @@
+# YAML basic data types
+
+# scalars
+
+max_retry: 100
+database: users
+
+Max_retry: 120
+
+# mapping/dictionary
+
+animals:
+  name: cat
+  age: 5
+
+# sequences
+
+employee:
+  - age: 28
+    name: Jack
+  - age: 34
+    name: Tim

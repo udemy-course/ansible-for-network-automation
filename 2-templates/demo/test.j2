@@ -1,0 +1,5 @@
+{# this line is comment, and will be included in the final file #}
+
+{% for host in groups['all'] %}
+{{ hostvars[host]['ansible_facts']['default_ipv4']['address'] }} {{ hostvars[host]['ansible_facts']['fqdn'] }}
+{% endfor %}

@@ -1,0 +1,17 @@
+---
+- hosts: web
+  gather_facts: no
+  vars:
+    interface_counter: 10
+    enable_bgp: yes
+  tasks:
+    - name: make sure the path exist
+      become: yes
+      file:
+        path: "{{ cfg_path }}"
+        state: directory
+        owner: vagrant
+    - name: copy cfg file
+      template:
+        src: "{{ cisco_cfg_file_name }}"
+        dest: "{{ cfg_path }}/{{ cisco_cfg_file_name }}"

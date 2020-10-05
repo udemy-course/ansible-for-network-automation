@@ -1,0 +1,35 @@
+- name: set up nginx
+  hosts: web
+  # gather_facts: no
+  tasks:
+    - name: print out the facts
+      debug:
+        var: ansible_facts
+    - name: install epel-release
+      become: yes
+      yum:
+        name: epel-release
+        state: present
+    - name: install nginx on centos
+      become: yes
+      yum:
+        name: nginx
+        state: present
+    - name: copy index.html
+      become: yes
+      copy:
+        src: index.html
+        dest: /usr/share/nginx/html/index.html
+    - name: start nginx
+      become: yes
+      service:
+        name: nginx
+        state: started
+    # - name: create fact
+    #   set_fact:
+    #     my_vars:
+    #       - a
+    #       - b
+    # - name: print out the custom fact we created
+    #   debug:
+    #     var: my_vars

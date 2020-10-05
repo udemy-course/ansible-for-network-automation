@@ -1,0 +1,8 @@
+[web]
+192.168.205.10 ansible_user=vagrant ansible_password=vagrant
+192.168.205.11 ansible_user=vagrant ansible_password=vagrant
+
+[web:vars]
+cfg_path=/etc/app
+cfg_file_name=app.cfg
+cisco_cfg_file_name=cisco.cfg
