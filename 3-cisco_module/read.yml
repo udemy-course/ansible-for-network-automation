@@ -1,0 +1,14 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - name: run multiple commands on remote nodes
+      ios_command:
+        commands:
+          - show version
+          - show ip interface brief
+      register: result
+
+    - name: print out the result
+      debug:
+        var: result.stdout[1]
