@@ -4,25 +4,27 @@
 Vagrant.require_version ">= 1.6.0"
 
 boxes = [
+
     {
-        :name => "web1",
+        :name => "host1",
         :eth1 => "192.168.205.10",
         :mem => "1024",
-        :cpu => "1"
+        :cpu => "1",
+        :image => "centos/7"
     },
     {
-        :name => "web2",
+        :name => "host2",
         :eth1 => "192.168.205.11",
         :mem => "1024",
-        :cpu => "1"
-    },  
+        :cpu => "1",
+        :image => "generic/ubuntu1804"
+    }
 ]
 
 Vagrant.configure(2) do |config|
-
-  config.vm.box = "centos/7"
   boxes.each do |opts|
     config.vm.define opts[:name] do |config|
+      config.vm.box = opts[:image]
       config.vm.hostname = opts[:name]
       config.vm.provider "vmware_fusion" do |v|
         v.vmx["memsize"] = opts[:mem]
@@ -35,5 +37,5 @@ Vagrant.configure(2) do |config|
       config.vm.network :private_network, ip: opts[:eth1]
     end
   end
-  config.vm.provision "shell", privileged: false, path: "./setup.sh"
+  config.vm.provision "shell", inline:"sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
 end

@@ -1,0 +1,15 @@
+---
+- name: loop test
+  hosts: web
+  become: yes
+  tasks:
+    - name: "create local user"
+      user:
+        name: "{{ username }}"
+      loop:
+        - test1
+        - test2
+        - test3
+        - test4
+      loop_control:
+        loop_var: username
