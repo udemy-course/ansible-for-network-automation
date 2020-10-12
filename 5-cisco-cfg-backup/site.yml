@@ -1,0 +1,61 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - name: cisco cfg backup
+      ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}.cfg"
+          dir_path: ./
+    - name: read cfg file content
+      set_fact:
+        file_content: "{{ item }}"
+      with_file:
+        - "{{ inventory_hostname }}.cfg"
+    - name: get the repository file tree
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/tree?ref=master&per_page=100&page=1
+        body_format: json
+        validate_certs: no
+        status_code: 200
+        return_content: yes
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+      register: response
+      delegate_to: localhost
+    - debug:
+        var: response
+    # please install jmespath
+    # pip install jmespath
+    - name: get project files
+      set_fact:
+        project_files: "{{ response.json | json_query('[].name') }}"
+        file_name: "{{ inventory_hostname }}.cfg"
+    - debug:
+        var: project_files
+    - name: set commit action
+      set_fact:
+        commit_action: create
+      when: file_name is not in project_files
+    - name: set commit action
+      set_fact:
+        commit_action: update
+      when: file_name in project_files
+    - name: push cfg to gitlab
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/commits
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+        validate_certs: no
+        method: POST
+        body:
+          branch: master
+          commit_message: create cisco cfg
+          actions:
+            - action: "{{ commit_action}}"
+              file_path: "{{ inventory_hostname }}.cfg"
+              content: "{{ file_content }}"
+        status_code: 201
+        body_format: json
+      delegate_to: localhost
