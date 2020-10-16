@@ -1,9 +1,6 @@
 [ios]
 r1.cisco.com ansible_user=cisco ansible_password=C1sc0!23
-r2.cisco.com ansible_user=cisco ansible_password=C1sc0!23
 
 [ios:vars]
 ansible_connection=network_cli
 ansible_network_os=ios
-gitlab_project_id=21810648
-gitlab_access_token=wp14WpKgEHixJV92Wq3V

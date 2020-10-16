@@ -1,0 +1,12 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - name: configure ip access list
+      ios_command:
+        commands:
+          - show ip access-lists ansible-demo
+      register: result
+    - name: print out the result
+      debug:
+        var: result.stdout_lines
