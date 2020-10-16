@@ -1,5 +1,6 @@
 [ios]
-r1.test.com ansible_user=cisco ansible_password=C1sc0!23
+r1.cisco.com ansible_user=cisco ansible_password=C1sc0!23
+r2.cisco.com ansible_user=cisco ansible_password=C1sc0!23
 
 [ios:vars]
 ansible_connection=network_cli

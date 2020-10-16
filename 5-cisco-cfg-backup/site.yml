@@ -1,7 +1,7 @@
 ---
 - hosts: ios
   gather_facts: no
-  serial: 1
+  # serial: 1
   tasks:
     - name: cisco cfg backup
       ios_config:
@@ -26,8 +26,6 @@
           Private-Token: "{{ gitlab_access_token }}"
       register: response
       delegate_to: localhost
-    # - debug:
-    #     var: response
     # please install jmespath
     # pip install jmespath
     - name: get project files
@@ -44,6 +42,26 @@
       set_fact:
         commit_action: update
       when: file_name in project_files
+    - name: create action dict
+      set_fact:
+        action_dict:
+          action: "{{ commit_action}}"
+          file_path: "{{ inventory_hostname }}.cfg"
+          content: "{{ file_content }}"
+    - name: remove local cfg files
+      file:
+        path: "{{ inventory_hostname }}.cfg"
+        state: absent
+
+- name: push to gitlab
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: create action list
+      set_fact:
+        action_list: "{{ action_list | default([]) + [ hostvars[item].action_dict ] }}"
+      loop: "{{ groups['ios'] }}"
+
     - name: push new/updated cfg to gitlab
       uri:
         url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/commits
@@ -54,14 +72,7 @@
         body:
           branch: master
           commit_message: backup cisco running cfg
-          actions:
-            - action: "{{ commit_action}}"
-              file_path: "{{ inventory_hostname }}.cfg"
-              content: "{{ file_content }}"
+          actions: "{{ action_list }}"
         status_code: 201
         body_format: json
       delegate_to: localhost
-    - name: remove local cfg files
-      file:
-        path: "{{ inventory_hostname }}.cfg"
-        state: absent
