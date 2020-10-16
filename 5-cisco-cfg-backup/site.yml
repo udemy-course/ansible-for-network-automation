@@ -1,7 +1,6 @@
 ---
 - hosts: ios
   gather_facts: no
-  # serial: 1
   tasks:
     - name: cisco cfg backup
       ios_config:
@@ -32,8 +31,6 @@
       set_fact:
         project_files: "{{ response.json | json_query('[].name') }}"
         file_name: "{{ inventory_hostname }}.cfg"
-    # - debug:
-    #     var: project_files
     - name: set commit action as create
       set_fact:
         commit_action: create
@@ -42,12 +39,35 @@
       set_fact:
         commit_action: update
       when: file_name in project_files
+    - name: get cfg file content from gitlab
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/files/{{ file_name }}/raw?ref=master
+        body_format: json
+        validate_certs: no
+        status_code: 200, 404
+        return_content: yes
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+      register: response
+      delegate_to: localhost
+      when: commit_action == "update"
+
+    - name: save file content from gitlab
+      set_fact:
+        file_content_in_gitlab: "{{ response.content }}"
+      when: commit_action == "update"
     - name: create action dict
       set_fact:
         action_dict:
           action: "{{ commit_action}}"
           file_path: "{{ inventory_hostname }}.cfg"
           content: "{{ file_content }}"
+      when: commit_action == "create" or (commit_action == "update" and file_content_in_gitlab != file_content)
+    - name: create empty dict
+      set_fact:
+        action_dict: {}
+      when: commit_action == "update" and file_content_in_gitlab == file_content
+
     - name: remove local cfg files
       file:
         path: "{{ inventory_hostname }}.cfg"
@@ -61,6 +81,7 @@
       set_fact:
         action_list: "{{ action_list | default([]) + [ hostvars[item].action_dict ] }}"
       loop: "{{ groups['ios'] }}"
+      when: hostvars[item].action_dict != {}
 
     - name: push new/updated cfg to gitlab
       uri:
@@ -76,3 +97,4 @@
         status_code: 201
         body_format: json
       delegate_to: localhost
+      when: action_list is defined
