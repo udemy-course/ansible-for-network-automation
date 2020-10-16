@@ -1,0 +1,100 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - name: cisco cfg backup
+      ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}.cfg"
+          dir_path: ./
+    - name: read cfg file content
+      set_fact:
+        file_content: "{{ item }}"
+      with_file:
+        - "{{ inventory_hostname }}.cfg"
+      no_log: True
+    - name: get the repository file tree
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/tree?ref=master&per_page=100&page=1
+        body_format: json
+        validate_certs: no
+        status_code: 200
+        return_content: yes
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+      register: response
+      delegate_to: localhost
+    # please install jmespath
+    # pip install jmespath
+    - name: get project files
+      set_fact:
+        project_files: "{{ response.json | json_query('[].name') }}"
+        file_name: "{{ inventory_hostname }}.cfg"
+    - name: set commit action as create
+      set_fact:
+        commit_action: create
+      when: file_name is not in project_files
+    - name: set commit action as update
+      set_fact:
+        commit_action: update
+      when: file_name in project_files
+    - name: get cfg file content from gitlab
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/files/{{ file_name }}/raw?ref=master
+        body_format: json
+        validate_certs: no
+        status_code: 200, 404
+        return_content: yes
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+      register: response
+      delegate_to: localhost
+      when: commit_action == "update"
+
+    - name: save file content from gitlab
+      set_fact:
+        file_content_in_gitlab: "{{ response.content }}"
+      when: commit_action == "update"
+    - name: create action dict
+      set_fact:
+        action_dict:
+          action: "{{ commit_action}}"
+          file_path: "{{ inventory_hostname }}.cfg"
+          content: "{{ file_content }}"
+      when: commit_action == "create" or (commit_action == "update" and file_content_in_gitlab != file_content)
+    - name: create empty dict
+      set_fact:
+        action_dict: {}
+      when: commit_action == "update" and file_content_in_gitlab == file_content
+
+    - name: remove local cfg files
+      file:
+        path: "{{ inventory_hostname }}.cfg"
+        state: absent
+
+- name: push to gitlab
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: create action list
+      set_fact:
+        action_list: "{{ action_list | default([]) + [ hostvars[item].action_dict ] }}"
+      loop: "{{ groups['ios'] }}"
+      when: hostvars[item].action_dict != {}
+
+    - name: push new/updated cfg to gitlab
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/commits
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+        validate_certs: no
+        method: POST
+        body:
+          branch: master
+          commit_message: backup cisco running cfg
+          actions: "{{ action_list }}"
+        status_code: 201
+        body_format: json
+      delegate_to: localhost
+      when: action_list is defined
