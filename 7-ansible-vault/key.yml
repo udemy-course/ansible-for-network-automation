@@ -1,0 +1,10 @@
+---
+- hosts: web
+  gather_facts: no
+  tasks:
+    - name: execute command
+      command: date
+      register: result
+    - name: print result
+      debug:
+        var: result.stdout_lines
