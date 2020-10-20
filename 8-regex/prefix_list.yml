@@ -1,0 +1,25 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    # - name: configure ip prefix list
+    #   ios_config:
+    #     lines: >-
+    #       ip prefix-list {{ ip_prefix_list_name }} seq {{ prefix_item.seq }} permit {{ prefix_item.prefix }}
+    #   loop: "{{ ip_prefix_list }}"
+    #   loop_control:
+    #     loop_var: prefix_item
+    - name: get prefix list
+      ios_command:
+        commands:
+          - show ip prefix-list {{ ip_prefix_list_name }}
+      register: result
+    - name: print result
+      debug:
+        var: result.stdout
+    - name: get the name of the prefix list
+      set_fact:
+        prefix_list_name_from_router: "{{ result.stdout[0] | regex_findall('^ip prefix-list (.*):') | first }}"
+    - name: print result after regex
+      debug:
+        var: prefix_list_name_from_router
