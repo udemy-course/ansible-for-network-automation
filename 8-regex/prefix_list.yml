@@ -20,6 +20,12 @@
     - name: get the name of the prefix list
       set_fact:
         prefix_list_name_from_router: "{{ result.stdout[0] | regex_findall('^ip prefix-list (.*):') | first }}"
-    - name: print result after regex
+    - name: get seq and prefix
+      set_fact:
+        prefix_list_values: "{{ result.stdout[0] | regex_findall('seq (\\d.) permit (.*)') }}"
+    - name: print out the value
       debug:
-        var: prefix_list_name_from_router
+        msg: "seq={{ prefix_item[0] }}, prefix={{ prefix_item[1] }}"
+      loop: "{{ prefix_list_values }}"
+      loop_control:
+        loop_var: prefix_item
