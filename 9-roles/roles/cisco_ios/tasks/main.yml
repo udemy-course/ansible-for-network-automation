@@ -1,0 +1,18 @@
+---
+# tasks file for cisco_ios
+- name: cisco cfg backup
+  ios_config:
+    backup: yes
+    backup_options:
+      filename: "{{ inventory_hostname }}.cfg"
+      dir_path: ./
+- name: read cfg file content
+  set_fact:
+    running_cfg: "{{ item }}"
+  with_file:
+    - "{{ inventory_hostname }}.cfg"
+  no_log: True
+- name: remove local cfg files
+  file:
+    path: "{{ inventory_hostname }}.cfg"
+    state: absent
