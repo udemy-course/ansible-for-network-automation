@@ -1,0 +1,18 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - name: get the repository file tree
+      uri:
+        url: https://gitlab.com/api/v4/projects/{{ gitlab_project_id }}/repository/tree?ref=master&per_page=100&page=1
+        body_format: json
+        validate_certs: no
+        status_code: 200
+        return_content: yes
+        headers:
+          Private-Token: "{{ gitlab_access_token }}"
+      register: response
+      delegate_to: localhost
+    - name: debug
+      debug:
+        var: response
