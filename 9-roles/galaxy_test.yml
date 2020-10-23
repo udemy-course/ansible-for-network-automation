@@ -1,0 +1,12 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: xiaopeng163.ansible_gitlab_tree
+      vars:
+        page_num: 1
+        branch_name: master
+    - name: print result
+      debug:
+        var: gitlab_repo_file_list
