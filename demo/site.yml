@@ -1,0 +1,15 @@
+---
+- hosts: ios
+  gather_facts: no
+  tasks:
+    - name: facts
+      ios_facts:
+        gather_network_resources: interfaces
+
+    - name: interface down
+      ios_config:
+        lines:
+          - description unused
+        parents: interface {{ item.name }}
+      loop: "{{ ansible_network_resources.interfaces }}"
+      when: item.enabled == false

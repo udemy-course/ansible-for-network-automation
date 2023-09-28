@@ -1,0 +1,7 @@
+[ios]
+r1.cisco.com ansible_user=cisco ansible_password=C1sc0!23
+r2.cisco.com ansible_user=cisco ansible_password=C1sc0!23
+
+[all:vars]
+ansible_connection=network_cli
+ansible_network_os=ios
